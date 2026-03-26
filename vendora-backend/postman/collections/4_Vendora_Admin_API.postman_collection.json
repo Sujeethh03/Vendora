@@ -1,0 +1,135 @@
+{
+  "info": {
+    "_postman_id": "vendora-admin-api",
+    "name": "Vendora - 4. Admin API",
+    "description": "Admin-only operations for approving sellers and product listings.\n\n## Dependencies\n- Run **Auth API > Login** as a user with `role = 'admin'`\n- Set admin role directly in DB: `UPDATE users SET role = 'admin' WHERE email = 'your@email.com'`\n\n## Flow\n1. **List Sellers** → see all seller profiles (pending + approved)\n2. **Approve Seller** → seller can now list products\n3. **List/Approve/Reject Products** → control what goes live to buyers",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Sellers",
+      "item": [
+        {
+          "name": "List All Sellers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/sellers",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "sellers"]
+            },
+            "description": "List all seller profiles — both pending and approved."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Got sellers list\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json()).to.be.an(\"array\");",
+                  "    var sellers = pm.response.json();",
+                  "    if (sellers.length > 0) {",
+                  "        pm.environment.set(\"seller_profile_id\", sellers[0].id);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Approve Seller",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/sellers/{{seller_profile_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "sellers", "{{seller_profile_id}}", "approve"]
+            },
+            "description": "Approve a seller profile. Once approved, the seller's products can go through the approval process."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Seller approved\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.is_approved).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Approve Product",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/products/{{product_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "products", "{{product_id}}", "approve"]
+            },
+            "description": "Approve a product listing. The product becomes visible to buyers in the public listing."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Product approved\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.status).to.eql(\"approved\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject Product",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/products/{{product_id}}/reject",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "products", "{{product_id}}", "reject"]
+            },
+            "description": "Reject a product listing. The product will not be visible to buyers."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Product rejected\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.status).to.eql(\"rejected\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
-# Vendora — Backend Design Guide
-### Stack: FastAPI + PostgreSQL
+# Vendora — V1 Build Guide
+### Stack: FastAPI + Next.js
 
 ---
 
@@ -7,58 +7,109 @@
 
 | Layer | Tool | Why |
 |---|---|---|
+| Frontend | Next.js 14 (App Router) | File-based routing, server components, server actions |
 | Backend | FastAPI (Python) | Lightweight REST API, async-first, auto docs |
 | Database | PostgreSQL | Free tier via Railway or Supabase |
 | ORM | SQLAlchemy 2.0 (async) + Alembic | Async DB queries + migrations |
 | DB Driver | asyncpg | Async PostgreSQL driver (use psycopg2-binary only for Alembic) |
 | Config | pydantic-settings | Type-safe environment variable loading |
-| Validation | Pydantic v2 | Request/response schemas |
+| Validation (BE) | Pydantic v2 | Request/response schemas |
+| Validation (FE) | Zod + React Hook Form | Type-safe form validation on the frontend |
 | Auth | JWT (python-jose) + refresh tokens | Access token (15min) + refresh token (7d) rotation |
+| UI Components | shadcn/ui + Radix UI | Accessible, composable component primitives |
+| Styling | Tailwind CSS | Utility-first, fast to build |
+| Theming | next-themes | Dark/light mode toggle, stored in localStorage |
+| Toasts | sonner | Lightweight toast notifications |
 | Image Storage | Cloudinary | Product image uploads, free 25GB tier |
 | Payments | Razorpay | UPI, cards, net banking — India-first |
-| HTTP client | httpx | Async HTTP client for external API calls |
-| Deploy | Railway | Free tier, Postgres + FastAPI together |
+| State (cart) | Zustand | Client-side cart, no DB needed for v1 |
+| HTTP client (BE) | httpx | Async HTTP client for external API calls |
+| Frontend Deploy | Vercel | Free tier, auto-deploys from GitHub |
+| Backend Deploy | Railway | Free tier, Postgres + FastAPI together |
 
 ---
 
 ## Folder Structure
 
 ```
-backend/
-├── main.py               # FastAPI app entry point, routers registered here
-├── config.py             # Pydantic-settings config (reads from .env)
-├── database.py           # Async SQLAlchemy engine + session factory
-├── exceptions.py         # Custom exception classes + FastAPI handlers
-├── dependencies.py       # JWT auth guard (get_current_user)
-├── models/
-│   ├── user.py
-│   ├── product.py
-│   └── order.py
-├── schemas/
-│   ├── user.py
-│   ├── product.py
-│   └── order.py
-├── routers/
-│   ├── auth.py
-│   ├── products.py
-│   ├── orders.py
-│   ├── sellers.py
-│   ├── payments.py
-│   └── admin.py
-├── services/             # Business logic — routers call services, not DB directly
-│   ├── auth.py           # register, login, token refresh
-│   ├── product.py        # create, update, delete, list products
-│   ├── order.py          # place order, fetch history
-│   └── payment.py        # Razorpay create + verify
-├── utils/
-│   └── cloudinary.py     # Image upload helper
-├── requirements.txt
-└── .env
+project/
+├── backend/
+│   ├── main.py               # FastAPI app entry point, routers registered here
+│   ├── config.py             # Pydantic-settings config (reads from .env)
+│   ├── database.py           # Async SQLAlchemy engine + session factory
+│   ├── exceptions.py         # Custom exception classes + FastAPI handlers
+│   ├── dependencies.py       # JWT auth guard (get_current_user)
+│   ├── models/
+│   │   ├── user.py
+│   │   ├── product.py
+│   │   └── order.py
+│   ├── schemas/
+│   │   ├── user.py
+│   │   ├── product.py
+│   │   └── order.py
+│   ├── routers/
+│   │   ├── auth.py
+│   │   ├── products.py
+│   │   ├── orders.py
+│   │   ├── sellers.py
+│   │   ├── payments.py
+│   │   └── admin.py
+│   ├── services/             # Business logic — routers call services, not DB directly
+│   │   ├── auth.py           # register, login, token refresh
+│   │   ├── product.py        # create, update, delete, list products
+│   │   ├── order.py          # place order, fetch history
+│   │   └── payment.py        # Razorpay create + verify
+│   ├── utils/
+│   │   └── cloudinary.py     # Image upload helper
+│   ├── requirements.txt
+│   └── .env
+│
+└── frontend/
+    ├── app/
+    │   ├── layout.tsx                          # Root layout (ThemeProvider, Toaster)
+    │   ├── page.tsx                            # Home / storefront
+    │   ├── (auth)/
+    │   │   └── login/page.tsx                 # Shared login for buyer + seller
+    │   ├── products/
+    │   │   ├── page.tsx                        # Product listing
+    │   │   └── [id]/page.tsx                  # Product detail
+    │   ├── cart/page.tsx
+    │   ├── checkout/page.tsx
+    │   ├── seller/
+    │   │   ├── dashboard/page.tsx
+    │   │   ├── orders/page.tsx
+    │   │   └── products/
+    │   │       ├── new/page.tsx
+    │   │       └── [id]/edit/page.tsx
+    │   └── admin/page.tsx
+    ├── actions/                                # Next.js Server Actions ("use server")
+    │   ├── auth-actions.ts                    # login, logout, register
+    │   ├── product-actions.ts                 # CRUD + image upload
+    │   └── order-actions.ts                   # place order, fetch history
+    ├── components/
+    │   ├── ui/                                # shadcn/ui components (Button, Input, etc.)
+    │   ├── Navbar.tsx
+    │   ├── ProductCard.tsx
+    │   ├── CartDrawer.tsx
+    │   └── SellerLayout.tsx
+    ├── hooks/
+    │   └── use-cart.ts                        # Thin wrapper over Zustand cart store
+    ├── lib/
+    │   ├── api-client.ts      # Server-only fetch wrapper (import "server-only")
+    │   └── auth.ts            # Token helpers (read/clear cookie — server-only)
+    ├── providers/
+    │   └── providers.tsx      # ThemeProvider + Toaster wrapped together
+    ├── store/
+    │   └── cart.ts            # Zustand cart store
+    ├── types/
+    │   └── index.ts           # Shared TypeScript types
+    ├── middleware.ts           # Protect /seller and /admin routes
+    └── .env.local
 ```
 
 ---
 
-## Architecture Patterns
+## Backend Architecture Patterns
 
 ### Async all the way
 Every route and service uses async functions. The asyncpg driver ensures no thread is blocked on database queries.
@@ -71,6 +122,19 @@ Routers handle HTTP concerns only. Business logic lives in the services layer �
 
 ### Custom exceptions
 Custom exception classes are defined for cases like product not found or unauthorized seller, with handlers registered at the app level to return consistent JSON error responses.
+
+---
+
+## Frontend Architecture Patterns
+
+### Server Actions instead of client-side fetch
+All API calls go through server-side actions — the server reads the auth cookie directly. No token is ever exposed to client-side JavaScript.
+
+### Server-only API client
+The API client is restricted to server-side use only. It reads the access token from cookies and attaches it as a Bearer header on every request to the FastAPI backend. The base URL is an internal env variable not exposed to the browser.
+
+### Forms with React Hook Form + Zod
+All forms use React Hook Form with a Zod schema for validation. This gives type-safe validation on the frontend before anything hits the server.
 
 ---
 
@@ -249,6 +313,19 @@ status                TEXT  -- 'created' | 'paid' | 'failed'
 
 ---
 
+## Next.js Key Decisions
+
+### Cart → Zustand (client-side only)
+No login needed to add to cart. Cart is stored in browser memory and persisted to localStorage. On checkout, the buyer logs in, then the server action creates the order.
+
+### Route protection (middleware.ts)
+`middleware.ts` checks for the `access_token` cookie on all `/seller/*` and `/admin/*` routes. If missing, redirects to `/login`.
+
+### Root layout with providers
+The root layout wraps the app in `ThemeProvider` (next-themes) and renders the `Toaster` (sonner) for global toast notifications.
+
+---
+
 ## Environment Variables
 
 ### backend/.env
@@ -260,6 +337,11 @@ status                TEXT  -- 'created' | 'paid' | 'failed'
 - CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
 - RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET
 
+### frontend/.env.local
+- API_URL — internal server-to-server URL, not exposed to browser
+- NEXT_PUBLIC_API_URL — only needed for Razorpay widget callback
+- NEXT_PUBLIC_RAZORPAY_KEY_ID
+
 ---
 
 ## Python Dependencies
@@ -270,32 +352,47 @@ status                TEXT  -- 'created' | 'paid' | 'failed'
 
 ---
 
-## Build Order
+## Build Order (Week by Week)
 
 ### Week 1 — Foundation
 - [ ] Set up FastAPI project with `config.py` (pydantic-settings) and async SQLAlchemy
 - [ ] Create all models with UUID PKs, `created_at`, `deleted_at`
 - [ ] Run first Alembic migration (use psycopg2 URL for Alembic, asyncpg URL for runtime)
 - [ ] Build `/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`
+- [ ] Set up Next.js with Tailwind + shadcn/ui init (`npx shadcn@latest init`)
+- [ ] Build login page with React Hook Form + Zod validation
 - [ ] Test auth end-to-end with token refresh
 
 ### Week 2 — Seller Side
 - [ ] Build `/products` POST, PUT, DELETE routes (service layer pattern)
 - [ ] Cloudinary image upload endpoint
+- [ ] Seller dashboard (server component fetches products via server action)
+- [ ] Add product form with validation (shadcn Form + Zod)
+- [ ] Edit product page
 - [ ] Product pending approval state
 
 ### Week 3 — Buyer Storefront
 - [ ] Build `/products` GET with filters (category, price, search via ILIKE)
+- [ ] Home page with featured products (server component)
+- [ ] Product listing with filter sidebar
+- [ ] Product detail page
+- [ ] Cart (Zustand with `persist` middleware — survives page refresh)
+- [ ] Cart drawer UI using shadcn Sheet component
 
 ### Week 4 — Payments & Orders
+- [ ] Checkout page (delivery address form with Zod validation)
 - [ ] Razorpay: `POST /payments/create-order` via httpx + verify endpoint
+- [ ] Razorpay JS SDK integration in Next.js (client component)
 - [ ] Order creation in DB after payment verified
+- [ ] Buyer order history page
+- [ ] Seller order management (view + update status)
 
 ### Week 5 — Admin & Deploy
 - [ ] Admin panel: approve/reject sellers and products
 - [ ] Set one user as admin directly in DB
 - [ ] Deploy FastAPI to Railway (add Postgres on Railway too)
-- [ ] Set all environment variables in Railway
+- [ ] Deploy Next.js to Vercel
+- [ ] Set all environment variables in both platforms
 - [ ] End-to-end test: seller signup → product upload → buyer purchase → order confirmed
 
 ---
@@ -303,3 +400,18 @@ status                TEXT  -- 'created' | 'paid' | 'failed'
 ## Admin Setup (one-time)
 
 After deploying, run an SQL update directly in your database to set `role = 'admin'` for your email address. No admin signup page needed in v1.
+
+---
+
+## What to Skip in V1
+
+| Feature | Why skip | Add in V2 |
+|---|---|---|
+| Email notifications | Needs SMTP setup | Use Resend or SendGrid |
+| Seller payouts | Complex compliance | Razorpay Route |
+| Search (full-text) | PostgreSQL ILIKE is fine for v1 | Elasticsearch / Typesense |
+| Reviews & ratings | Nice to have | After order delivered |
+| Multi-image carousel | One primary image is enough | After core works |
+| Discount codes | Extra DB table + logic | V2 |
+| Guest checkout | Forces login at checkout for now | V2 |
+| WebSocket / real-time order updates | Polling is fine for v1 | V2 |

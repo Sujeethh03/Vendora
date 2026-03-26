@@ -1,0 +1,199 @@
+{
+  "info": {
+    "_postman_id": "vendora-products-api",
+    "name": "Vendora - 2. Products API",
+    "description": "Product listing and management.\n\n## Dependencies\n- Run **Auth API > Login** first\n\n## Flow\n1. Any logged-in user can create products\n2. Products are immediately visible in the public listing\n3. Users can only update or delete their own products",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "List Products",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/products?page=1&page_size=20",
+          "host": ["{{base_url}}"],
+          "path": ["products"],
+          "query": [
+            { "key": "page", "value": "1" },
+            { "key": "page_size", "value": "20" },
+            { "key": "category", "value": "", "disabled": true },
+            { "key": "search", "value": "", "disabled": true },
+            { "key": "min_price", "value": "", "disabled": true },
+            { "key": "max_price", "value": "", "disabled": true },
+            { "key": "seller_id", "value": "", "disabled": true }
+          ]
+        },
+        "description": "List all products. Supports filtering by category, search (case-insensitive), min_price, max_price, seller_id, and pagination."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Products listed\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.have.property(\"items\");",
+              "    pm.expect(data).to.have.property(\"total\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "List Products by Seller",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/products?seller_id={{user_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["products"],
+          "query": [
+            { "key": "seller_id", "value": "{{user_id}}" }
+          ]
+        },
+        "description": "List all products created by a specific seller."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Seller products listed\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.have.property(\"items\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get Product",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/products/{{product_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["products", "{{product_id}}"]
+        },
+        "description": "Get a single product by ID."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Product found\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.have.property(\"id\");",
+              "    pm.expect(data).to.have.property(\"name\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create Product",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": {
+          "raw": "{{base_url}}/products",
+          "host": ["{{base_url}}"],
+          "path": ["products"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Handmade Leather Wallet\",\n  \"description\": \"Genuine leather, slim design\",\n  \"price\": 799.00,\n  \"stock\": 50,\n  \"category\": \"accessories\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "description": "Any logged-in user can create a product. It is immediately visible in the listing."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Product created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "    var data = pm.response.json();",
+              "    pm.environment.set(\"product_id\", data.id);",
+              "    pm.expect(data.status).to.eql(\"approved\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Update Product",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": {
+          "raw": "{{base_url}}/products/{{product_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["products", "{{product_id}}"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"price\": 699.00,\n  \"stock\": 45\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "description": "Update your own product. Only provided fields are updated."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Product updated\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delete Product",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/products/{{product_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["products", "{{product_id}}"]
+        },
+        "description": "Soft-deletes the product. It disappears from listings but is not removed from the database."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Product deleted\", function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

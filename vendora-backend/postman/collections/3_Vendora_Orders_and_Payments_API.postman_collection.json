@@ -1,0 +1,210 @@
+{
+  "info": {
+    "_postman_id": "vendora-orders-payments-api",
+    "name": "Vendora - 3. Orders & Payments API",
+    "description": "Order placement, history, seller fulfillment, and Razorpay payment flow.\n\n## Dependencies\n- Run **Auth API > Login** first\n- At least one approved product must exist (`product_id` env var set)\n\n## Buyer Payment Flow\n1. **Place Order** → captures `order_id`\n2. **Create Razorpay Order** → captures `razorpay_order_id`\n3. Open Razorpay checkout widget on frontend with the `razorpay_order_id`\n4. After payment, call **Verify Payment** with the returned payment details\n\n## Seller Flow\n1. **Get Seller Orders** → see all orders containing your products\n2. **Update Order Status** → mark as `shipped` or `delivered`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Buyer",
+      "item": [
+        {
+          "name": "Place Order",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": ["{{base_url}}"],
+              "path": ["orders"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product_id\": \"{{product_id}}\",\n      \"quantity\": 1\n    }\n  ],\n  \"delivery_address\": \"123 MG Road, Bangalore, Karnataka 560001\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Buyer places an order. Validates stock, deducts inventory, and creates order in `pending` state."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Order placed\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set(\"order_id\", data.id);",
+                  "    pm.expect(data.status).to.eql(\"pending\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "My Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders/my",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "my"]
+            },
+            "description": "Get the current buyer's order history."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Got order history\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json()).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Create Razorpay Order",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payments/create-order?order_id={{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "create-order"],
+              "query": [
+                { "key": "order_id", "value": "{{order_id}}" }
+              ]
+            },
+            "description": "Creates a Razorpay order for the given vendora order. Returns razorpay_order_id, amount (in paise), and currency to pass to the Razorpay JS widget."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Razorpay order created\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json();",
+                  "    pm.environment.set(\"razorpay_order_id\", data.razorpay_order_id);",
+                  "    pm.expect(data).to.have.property(\"amount\");",
+                  "    pm.expect(data.currency).to.eql(\"INR\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify Payment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/payments/verify",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "verify"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": \"{{order_id}}\",\n  \"razorpay_order_id\": \"{{razorpay_order_id}}\",\n  \"razorpay_payment_id\": \"pay_XXXXXXXXXXXXXX\",\n  \"razorpay_signature\": \"signature_from_razorpay_callback\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Verifies the Razorpay HMAC signature server-side. If valid, marks the order as `confirmed` and payment as `paid`. Never trust the frontend to confirm payment."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Payment verified\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.status).to.eql(\"paid\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Seller",
+      "item": [
+        {
+          "name": "Get Seller Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/seller/orders",
+              "host": ["{{base_url}}"],
+              "path": ["seller", "orders"]
+            },
+            "description": "Get all orders that contain the current seller's products."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Got seller orders\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json()).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/seller/orders/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["seller", "orders", "{{order_id}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"shipped\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Seller updates order status. Allowed values: `shipped`, `delivered`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Order status updated\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
