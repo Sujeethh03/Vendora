@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from config import settings
 from database import get_db
-from exceptions import UnauthorizedError
+from exceptions import UnauthorizedError, ForbiddenError
 from models.user import User
 
 
@@ -35,6 +35,12 @@ async def get_current_user(
     if user is None:
         raise UnauthorizedError("User not found")
 
+    return user
+
+
+async def require_admin(user: User = Depends(get_current_user)) -> User:
+    if not user.is_admin:
+        raise ForbiddenError("Admin access required")
     return user
 
 

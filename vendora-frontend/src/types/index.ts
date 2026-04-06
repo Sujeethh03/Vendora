@@ -1,7 +1,7 @@
 export interface User {
     id: string
     email: string
-    role: "buyer" | "seller"
+    is_admin: boolean
 }
 
 export interface ProductImage {

@@ -11,7 +11,6 @@ interface GetProductsParams {
     max_price?: string
     page?: string
     page_size?: string
-    seller_id?: string
 }
 
 export async function getProducts(params: GetProductsParams = {}): Promise<ProductsResponse> {
@@ -23,7 +22,6 @@ export async function getProducts(params: GetProductsParams = {}): Promise<Produ
         if (params.max_price) queryParams.max_price = params.max_price
         if (params.page) queryParams.page = params.page
         if (params.page_size) queryParams.page_size = params.page_size
-        if (params.seller_id) queryParams.seller_id = params.seller_id
 
         return await apiClient.get<ProductsResponse>("/products", { params: queryParams })
     } catch (error: any) {

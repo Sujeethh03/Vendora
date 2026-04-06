@@ -3,8 +3,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Package } from "lucide-react"
 import { Product } from "@/types"
+import { config } from "@/lib/config"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+const API_URL = config.api.publicBaseUrl
 
 const formatPrice = (price: number) =>
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(price)

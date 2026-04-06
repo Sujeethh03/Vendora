@@ -3,8 +3,9 @@
 import { useState } from "react"
 import { Package } from "lucide-react"
 import { ProductImage } from "@/types"
+import { config } from "@/lib/config"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+const API_URL = config.api.publicBaseUrl
 
 interface ProductGalleryProps {
     images: ProductImage[]

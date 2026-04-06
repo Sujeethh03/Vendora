@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 
-from exceptions import NotFoundError, ForbiddenError, AppException
+from exceptions import NotFoundError, AppException
 from models.product import Product, ProductImage
 from schemas.product import ProductCreate, ProductUpdate
 
@@ -16,8 +16,8 @@ UPLOAD_DIR = "uploads/products"
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 
-async def create_product(db: AsyncSession, seller_id: uuid.UUID, data: ProductCreate) -> Product:
-    product = Product(seller_id=seller_id, **data.model_dump())
+async def create_product(db: AsyncSession, admin_id: uuid.UUID, data: ProductCreate) -> Product:
+    product = Product(seller_id=admin_id, **data.model_dump())
     db.add(product)
     await db.commit()
     await db.refresh(product, ["images"])
@@ -25,11 +25,9 @@ async def create_product(db: AsyncSession, seller_id: uuid.UUID, data: ProductCr
 
 
 async def update_product(
-    db: AsyncSession, product_id: uuid.UUID, seller_id: uuid.UUID, data: ProductUpdate
+    db: AsyncSession, product_id: uuid.UUID, data: ProductUpdate
 ) -> Product:
     product = await _get_active_product(db, product_id)
-    if product.seller_id != seller_id:
-        raise ForbiddenError("You do not own this product")
 
     for field, value in data.model_dump(exclude_none=True).items():
         setattr(product, field, value)
@@ -39,10 +37,8 @@ async def update_product(
     return product
 
 
-async def delete_product(db: AsyncSession, product_id: uuid.UUID, seller_id: uuid.UUID) -> None:
+async def delete_product(db: AsyncSession, product_id: uuid.UUID) -> None:
     product = await _get_active_product(db, product_id)
-    if product.seller_id != seller_id:
-        raise ForbiddenError("You do not own this product")
     # Delete image files from disk
     result = await db.execute(select(ProductImage).where(ProductImage.product_id == product_id))
     images = result.scalars().all()
@@ -62,13 +58,10 @@ async def list_products(
     search: str | None = None,
     min_price: float | None = None,
     max_price: float | None = None,
-    seller_id: uuid.UUID | None = None,
     page: int = 1,
     page_size: int = 20,
 ) -> tuple[list[Product], int]:
-    query = select(Product).where(
-        Product.deleted_at.is_(None),
-    ).options(selectinload(Product.images))
+    query = select(Product).options(selectinload(Product.images))
 
     if category:
         query = query.where(Product.category == category)
@@ -78,8 +71,6 @@ async def list_products(
         query = query.where(Product.price >= min_price)
     if max_price is not None:
         query = query.where(Product.price <= max_price)
-    if seller_id is not None:
-        query = query.where(Product.seller_id == seller_id)
 
     count_result = await db.execute(select(func.count()).select_from(query.subquery()))
     total = count_result.scalar()
@@ -91,11 +82,9 @@ async def list_products(
 
 
 async def upload_product_image(
-    db: AsyncSession, product_id: uuid.UUID, seller_id: uuid.UUID, file: UploadFile
+    db: AsyncSession, product_id: uuid.UUID, file: UploadFile
 ) -> ProductImage:
-    product = await _get_active_product(db, product_id)
-    if product.seller_id != seller_id:
-        raise ForbiddenError("You do not own this product")
+    await _get_active_product(db, product_id)
 
     if file.content_type not in ALLOWED_TYPES:
         raise AppException(400, "Only JPEG, PNG, and WebP images are allowed")
@@ -129,11 +118,9 @@ async def upload_product_image(
 
 
 async def delete_product_image(
-    db: AsyncSession, product_id: uuid.UUID, image_id: uuid.UUID, seller_id: uuid.UUID
+    db: AsyncSession, product_id: uuid.UUID, image_id: uuid.UUID
 ) -> None:
-    product = await _get_active_product(db, product_id)
-    if product.seller_id != seller_id:
-        raise ForbiddenError("You do not own this product")
+    await _get_active_product(db, product_id)
 
     result = await db.execute(
         select(ProductImage).where(ProductImage.id == image_id, ProductImage.product_id == product_id)
@@ -160,11 +147,9 @@ async def delete_product_image(
 
 
 async def set_primary_image(
-    db: AsyncSession, product_id: uuid.UUID, image_id: uuid.UUID, seller_id: uuid.UUID
+    db: AsyncSession, product_id: uuid.UUID, image_id: uuid.UUID
 ) -> ProductImage:
-    product = await _get_active_product(db, product_id)
-    if product.seller_id != seller_id:
-        raise ForbiddenError("You do not own this product")
+    await _get_active_product(db, product_id)
 
     # Clear existing primary
     all_result = await db.execute(
@@ -190,7 +175,7 @@ async def set_primary_image(
 async def _get_active_product(db: AsyncSession, product_id: uuid.UUID) -> Product:
     result = await db.execute(
         select(Product)
-        .where(Product.id == product_id, Product.deleted_at.is_(None))
+        .where(Product.id == product_id)
         .options(selectinload(Product.images))
     )
     product = result.scalar_one_or_none()

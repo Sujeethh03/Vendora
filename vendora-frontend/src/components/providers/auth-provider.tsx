@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const userData = await getMe()
                 setUser(userData)
                 toast.success("Welcome back!")
-                router.push("/dashboard")
+                router.push(userData?.is_admin ? "/dashboard" : "/")
             } else {
                 toast.error(result.error || "Login failed")
                 throw new Error(result.error)
@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const userData = await getMe()
                 setUser(userData)
                 toast.success("Account created successfully!")
-                router.push("/dashboard")
+                router.push("/")
             } else {
                 toast.error(result.error || "Registration failed")
                 throw new Error(result.error)

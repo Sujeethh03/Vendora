@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation"
 import { DashboardSidebar } from "@/components/features/dashboard-sidebar"
 import { MobileNav } from "@/components/features/mobile-nav"
 import { ThemeProvider } from "@/components/providers/theme-provider"
@@ -9,6 +10,10 @@ export default async function DashboardLayout({
     children: React.ReactNode
 }) {
     const user = await getMe()
+
+    if (!user || !user.is_admin) {
+        redirect("/login")
+    }
 
     return (
         <ThemeProvider

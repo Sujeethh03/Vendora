@@ -12,8 +12,10 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Pencil, Trash2, Package, ImageOff } from "lucide-react"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 import { Product } from "@/types"
+import { config } from "@/lib/config"
+
+const API_URL = config.api.publicBaseUrl
 import { deleteProduct } from "@/actions/product-actions"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"

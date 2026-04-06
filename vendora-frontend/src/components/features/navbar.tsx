@@ -54,13 +54,17 @@ export function Navbar() {
                                             </div>
                                         </DropdownMenuLabel>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuItem asChild>
-                                            <Link href="/dashboard" className="cursor-pointer">
-                                                <LayoutDashboard className="mr-2 h-4 w-4" />
-                                                Dashboard
-                                            </Link>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
+                                        {user.is_admin && (
+                                            <>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href="/dashboard" className="cursor-pointer">
+                                                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                                                        Dashboard
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                            </>
+                                        )}
                                         <DropdownMenuItem
                                             className="text-destructive focus:text-destructive cursor-pointer"
                                             onClick={() => logout()}

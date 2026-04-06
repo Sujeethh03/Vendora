@@ -6,9 +6,10 @@ import { Loader2, Star, Trash2, ImagePlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ProductImage } from "@/types"
 import { uploadProductImage, deleteProductImage, setPrimaryImage } from "@/actions/product-actions"
+import { config } from "@/lib/config"
 
 const MAX_IMAGES = 5
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+const API_URL = config.api.publicBaseUrl
 
 interface ImageUploaderProps {
     productId: string
