@@ -16,6 +16,7 @@ import { Product } from "@/types"
 import { config } from "@/lib/config"
 
 const API_URL = config.api.publicBaseUrl
+import { formatPrice } from "@/lib/format"
 import { deleteProduct } from "@/actions/product-actions"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -28,9 +29,6 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { ConfirmDeleteDialog } from "@/components/features/confirm-delete-dialog"
-
-const formatPrice = (price: number) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(price)
 
 interface ProductsTableProps {
     products: Product[]

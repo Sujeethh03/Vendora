@@ -9,7 +9,7 @@ import { toast } from "sonner"
 interface AuthContextType {
     user: User | null
     isLoading: boolean
-    login: (data: LoginRequest) => Promise<void>
+    login: (data: LoginRequest, redirectTo?: string) => Promise<void>
     logout: () => Promise<void>
     register: (data: RegisterRequest) => Promise<void>
 }
@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loadUser()
     }, [])
 
-    const login = async (data: LoginRequest) => {
+    const login = async (data: LoginRequest, redirectTo?: string) => {
         setIsLoading(true)
         try {
             const result = await loginAction(data)
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const userData = await getMe()
                 setUser(userData)
                 toast.success("Welcome back!")
-                router.push(userData?.is_admin ? "/dashboard" : "/")
+                router.push(userData?.is_admin ? "/dashboard" : (redirectTo || "/"))
             } else {
                 toast.error(result.error || "Login failed")
                 throw new Error(result.error)

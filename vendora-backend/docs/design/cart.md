@@ -35,14 +35,13 @@ All endpoints require authentication (`get_current_user`).
 | Method   | Path                          | Description                          |
 |----------|-------------------------------|--------------------------------------|
 | `GET`    | `/cart`                       | Get current user's cart with totals  |
-| `POST`   | `/cart/items`                 | Add item or increment quantity       |
-| `PUT`    | `/cart/items/{product_id}`    | Set quantity for a specific item     |
+| `POST`   | `/cart/items`                 | Upsert item — insert or increment    |
 | `DELETE` | `/cart/items/{product_id}`    | Remove a specific item               |
 | `DELETE` | `/cart`                       | Clear entire cart                    |
 
 ### Schemas
 
-**Request — Add Item:**
+**Request — Upsert Item:**
 ```json
 {
   "product_id": "uuid",
@@ -50,12 +49,8 @@ All endpoints require authentication (`get_current_user`).
 }
 ```
 
-**Request — Update Quantity:**
-```json
-{
-  "quantity": 3
-}
-```
+If the product is not yet in the cart, it is inserted with the given quantity.
+If it already exists, the quantity is incremented by the given amount.
 
 **Response — Cart:**
 ```json
@@ -122,7 +117,6 @@ Cart is fetched from the server on mount (if user is logged in) and kept in sync
 src/actions/cart-actions.ts
   getCart()
   addToCart(productId, quantity)
-  updateCartItem(productId, quantity)
   removeFromCart(productId)
   clearCart()
 ```

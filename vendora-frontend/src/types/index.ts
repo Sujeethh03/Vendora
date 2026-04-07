@@ -48,8 +48,66 @@ export interface RegisterRequest {
     password: string
 }
 
+export interface CartItem {
+    product_id: string
+    product_name: string
+    product_image: string | null
+    price: number
+    quantity: number
+    subtotal: number
+}
+
+export interface CartResponse {
+    items: CartItem[]
+    total_items: number
+    total_amount: number
+}
+
 export interface ActionResult<T = void> {
     success: boolean
     data?: T
     error?: string
+}
+
+export interface DeliveryAddress {
+    full_name: string
+    phone: string
+    line1: string
+    line2?: string | null
+    city: string
+    state: string
+    pincode: string
+}
+
+export interface OrderItem {
+    product_id: string | null
+    product_name: string
+    unit_price: number
+    quantity: number
+    subtotal: number
+}
+
+export interface Order {
+    id: string
+    status: string
+    total_amount: number
+    delivery_address: DeliveryAddress
+    created_at: string
+    items: OrderItem[]
+}
+
+export interface OrderSummary {
+    id: string
+    status: string
+    total_amount: number
+    delivery_address: DeliveryAddress
+    created_at: string
+    item_count: number
+}
+
+export interface OrderListResponse {
+    items: OrderSummary[]
+    total: number
+    page: number
+    page_size: number
 }

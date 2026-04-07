@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useAuth } from "@/components/providers/auth-provider"
+import { useCart } from "@/components/providers/cart-provider"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -13,10 +14,11 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { ShoppingBag, LayoutDashboard, LogOut } from "lucide-react"
+import { ShoppingBag, ShoppingCart, LayoutDashboard, LogOut } from "lucide-react"
 
 export function Navbar() {
     const { user, isLoading, logout } = useAuth()
+    const { totalItems } = useCart()
 
     const getInitials = (email: string | undefined) => {
         if (email) return email[0].toUpperCase()
@@ -33,6 +35,19 @@ export function Navbar() {
 
                 <div className="flex items-center gap-3">
                     <ThemeToggle />
+                    {user && !user.is_admin && (
+                        <Button variant="ghost" size="icon" asChild className="relative">
+                            <Link href="/cart">
+                                <ShoppingCart className="h-5 w-5" />
+                                {totalItems > 0 && (
+                                    <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                                        {totalItems > 99 ? "99+" : totalItems}
+                                    </span>
+                                )}
+                                <span className="sr-only">Cart ({totalItems})</span>
+                            </Link>
+                        </Button>
+                    )}
                     {!isLoading && (
                         <>
                             {user ? (

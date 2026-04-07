@@ -5,14 +5,13 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { ProductGallery } from "./product-gallery"
-import { ShoppingCart, Zap, Package, CheckCircle2, XCircle, AlertCircle } from "lucide-react"
+import { AddToCartButton } from "@/components/features/add-to-cart-button"
+import { Zap, Package, CheckCircle2, XCircle, AlertCircle } from "lucide-react"
+import { formatPrice, formatDate } from "@/lib/format"
 
 interface ProductPageProps {
     params: Promise<{ id: string }>
 }
-
-const formatPrice = (price: number) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(price)
 
 function StockBadge({ stock }: { stock: number }) {
     if (stock === 0)
@@ -40,11 +39,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
     if (!product) notFound()
 
-    const listedDate = new Date(product.created_at).toLocaleDateString("en-IN", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-    })
+    const listedDate = formatDate(product.created_at)
 
     return (
         <div className="min-h-screen bg-background">
@@ -88,15 +83,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                                 <Zap className="h-4 w-4" />
                                 Buy Now
                             </Button>
-                            <Button
-                                size="lg"
-                                variant="outline"
-                                className="w-full gap-2"
-                                disabled={product.stock === 0}
-                            >
-                                <ShoppingCart className="h-4 w-4" />
-                                Add to Cart
-                            </Button>
+                            <AddToCartButton productId={product.id} stock={product.stock} />
                         </div>
 
                         <Separator />

@@ -5,6 +5,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { useSearchParams } from "next/navigation"
 import { useAuth } from "@/components/providers/auth-provider"
 import { Button } from "@/components/ui/button"
 import {
@@ -29,6 +30,8 @@ type LoginValues = z.infer<typeof loginSchema>
 export default function LoginPage() {
     const { login, isLoading } = useAuth()
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const searchParams = useSearchParams()
+    const redirectTo = searchParams.get("redirect") ?? undefined
 
     const form = useForm<LoginValues>({
         resolver: zodResolver(loginSchema),
@@ -41,7 +44,7 @@ export default function LoginPage() {
     async function onSubmit(data: LoginValues) {
         setIsSubmitting(true)
         try {
-            await login(data)
+            await login(data, redirectTo)
         } catch (error) {
             // Error handling is managed in AuthProvider (toast)
         } finally {

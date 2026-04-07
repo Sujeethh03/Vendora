@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, Response, Cookie
+from fastapi import APIRouter, Depends, Response, Cookie, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
@@ -8,18 +10,21 @@ from schemas.user import RegisterRequest, LoginRequest, UserOut
 from services import auth as auth_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+limiter = Limiter(key_func=get_remote_address)
 
 COOKIE_OPTS = dict(httponly=True, samesite="lax", secure=False)  # set secure=True in prod
 
 
 @router.post("/register", response_model=UserOut, status_code=201)
-async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("10/minute")
+async def register(request: Request, data: RegisterRequest, db: AsyncSession = Depends(get_db)):
     user = await auth_service.register(db, data)
     return user
 
 
 @router.post("/login")
-async def login(data: LoginRequest, response: Response, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def login(request: Request, data: LoginRequest, response: Response, db: AsyncSession = Depends(get_db)):
     access_token, refresh_token = await auth_service.login(db, data.email, data.password)
     response.set_cookie("access_token", access_token, max_age=15 * 60, **COOKIE_OPTS)
     response.set_cookie("refresh_token", refresh_token, max_age=7 * 24 * 3600, **COOKIE_OPTS)

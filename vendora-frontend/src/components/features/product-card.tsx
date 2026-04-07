@@ -4,11 +4,9 @@ import { Badge } from "@/components/ui/badge"
 import { Package } from "lucide-react"
 import { Product } from "@/types"
 import { config } from "@/lib/config"
+import { formatPrice } from "@/lib/format"
 
 const API_URL = config.api.publicBaseUrl
-
-const formatPrice = (price: number) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(price)
 
 interface ProductCardProps {
     product: Product
