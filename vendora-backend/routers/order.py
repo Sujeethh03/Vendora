@@ -7,12 +7,13 @@ from database import get_db
 from dependencies import get_current_user
 from models.user import User
 from schemas.order import PlaceOrderRequest, OrderOut, OrderListOut
+from schemas.payment import CheckoutSessionOut
 from services import order as order_service
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
 
-@router.post("", response_model=OrderOut, status_code=201)
+@router.post("", response_model=CheckoutSessionOut, status_code=201)
 async def place_order(
     data: PlaceOrderRequest,
     db: AsyncSession = Depends(get_db),

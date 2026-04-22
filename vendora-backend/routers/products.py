@@ -7,6 +7,7 @@ from database import get_db
 from dependencies import require_admin
 from models.user import User
 from schemas.product import ProductCreate, ProductUpdate, ProductOut, ProductListOut, ProductImageOut
+from schemas.product_variant import ProductVariantCreate, ProductVariantUpdate, ProductVariantOut
 from services import product as product_service
 
 router = APIRouter(prefix="/products", tags=["products"])
@@ -89,3 +90,34 @@ async def set_primary_image(
     _: User = Depends(require_admin),
 ):
     return await product_service.set_primary_image(db, product_id, image_id)
+
+
+@router.post("/{product_id}/variants", response_model=ProductVariantOut, status_code=201)
+async def create_variant(
+    product_id: uuid.UUID,
+    data: ProductVariantCreate,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    return await product_service.create_variant(db, product_id, data)
+
+
+@router.put("/{product_id}/variants/{variant_id}", response_model=ProductVariantOut)
+async def update_variant(
+    product_id: uuid.UUID,
+    variant_id: uuid.UUID,
+    data: ProductVariantUpdate,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    return await product_service.update_variant(db, product_id, variant_id, data)
+
+
+@router.delete("/{product_id}/variants/{variant_id}", status_code=204)
+async def delete_variant(
+    product_id: uuid.UUID,
+    variant_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    await product_service.delete_variant(db, product_id, variant_id)

@@ -1,14 +1,18 @@
 "use server"
 
 import { apiClient } from "@/lib/api-client"
-import { Order, OrderListResponse, DeliveryAddress, ActionResult } from "@/types"
+import { Order, OrderListResponse, DeliveryAddress, ActionResult, CheckoutSession } from "@/types"
 
 export async function placeOrder(
-    deliveryAddress: DeliveryAddress
-): Promise<ActionResult<Order>> {
+    deliveryAddress: DeliveryAddress,
+    discountCode?: string | null
+): Promise<ActionResult<CheckoutSession>> {
     try {
-        const order = await apiClient.post<Order>("/orders", { delivery_address: deliveryAddress })
-        return { success: true, data: order }
+        const session = await apiClient.post<CheckoutSession>("/orders", {
+            delivery_address: deliveryAddress,
+            ...(discountCode ? { discount_code: discountCode } : {}),
+        })
+        return { success: true, data: session }
     } catch (error: any) {
         console.error("Failed to place order:", error)
         return { success: false, error: error.message || "Failed to place order" }

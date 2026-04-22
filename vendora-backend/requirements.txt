@@ -13,6 +13,7 @@ pydantic-settings
 httpx
 cloudinary
 razorpay
+apscheduler
 python-dotenv
 
 # Dev

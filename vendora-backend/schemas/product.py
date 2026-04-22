@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 from pydantic import BaseModel
+from schemas.product_variant import ProductVariantOut
 
 
 class ProductCreate(BaseModel):
@@ -38,6 +39,7 @@ class ProductOut(BaseModel):
     status: str
     created_at: datetime
     images: list[ProductImageOut] = []
+    variants: list[ProductVariantOut] = []
 
     model_config = {"from_attributes": True}
 

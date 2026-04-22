@@ -79,7 +79,7 @@ export function DashboardSidebar({ className, user }: DashboardSidebarProps) {
                                 </Avatar>
                                 <div className="flex flex-col items-start text-left truncate">
                                     <span className="text-sm font-medium truncate w-full">{displayName}</span>
-                                    <span className="text-xs text-muted-foreground capitalize">{user?.role || "user"}</span>
+                                    <span className="text-xs text-muted-foreground capitalize">{user?.is_admin ? "admin" : "user"}</span>
                                 </div>
                             </div>
                         </Button>

@@ -23,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
 import { ImageUploader } from "@/components/features/image-uploader"
+import { VariantManager } from "@/components/features/variant-manager"
 
 const editProductSchema = z.object({
     name: z.string().min(1, "Product name is required"),
@@ -85,6 +86,14 @@ export function EditProductForm({ product }: EditProductFormProps) {
             </CardHeader>
             <CardContent>
                 <ImageUploader productId={product.id} initialImages={product.images ?? []} />
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle>Weight / Size Variants</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <VariantManager productId={product.id} initialVariants={product.variants ?? []} />
             </CardContent>
         </Card>
         <Card>

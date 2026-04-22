@@ -12,10 +12,11 @@ import { toast } from "sonner"
 interface AddToCartButtonProps {
     productId: string
     stock: number
+    variantId?: string
     className?: string
 }
 
-export function AddToCartButton({ productId, stock, className }: AddToCartButtonProps) {
+export function AddToCartButton({ productId, stock, variantId, className }: AddToCartButtonProps) {
     const { user } = useAuth()
     const { addItem, isLoading } = useCart()
     const router = useRouter()
@@ -27,7 +28,7 @@ export function AddToCartButton({ productId, stock, className }: AddToCartButton
             return
         }
         setAdding(true)
-        await addItem(productId, 1)
+        await addItem(productId, 1, variantId)
         toast.success("Added to cart")
         setAdding(false)
     }

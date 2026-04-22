@@ -10,11 +10,12 @@ interface CartContextType {
     items: CartItem[]
     totalItems: number
     totalAmount: number
+    minOrderAmount: number
     isLoading: boolean
     isInitializing: boolean
-    addItem: (productId: string, quantity: number) => Promise<void>
-    removeItem: (productId: string) => Promise<void>
-    updateQuantity: (productId: string, newQuantity: number) => Promise<void>
+    addItem: (productId: string, quantity: number, variantId?: string) => Promise<void>
+    removeItem: (itemId: string) => Promise<void>
+    updateQuantity: (itemId: string, newQuantity: number) => Promise<void>
     clearCart: () => Promise<void>
     resetCart: () => void
 }
@@ -40,13 +41,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
             .finally(() => setIsInitializing(false))
     }, [user])
 
-    const addItem = async (productId: string, quantity: number) => {
+    const addItem = async (productId: string, quantity: number, variantId?: string) => {
         setIsLoading(true)
         try {
-            const data = await browserApiClient.post<CartResponse>("/cart/items", {
-                product_id: productId,
-                quantity,
-            })
+            const body: Record<string, unknown> = { product_id: productId, quantity }
+            if (variantId) body.variant_id = variantId
+            const data = await browserApiClient.post<CartResponse>("/cart/items", body)
             setCart(data)
         } catch (err) {
             toast.error(err instanceof BrowserApiError ? err.message : "Failed to update cart")
@@ -55,21 +55,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    const removeItem = async (productId: string) => {
+    const removeItem = async (itemId: string) => {
         setIsLoading(true)
         try {
-            await browserApiClient.delete(`/cart/items/${productId}`)
+            await browserApiClient.delete(`/cart/items/${itemId}`)
             setCart((prev) =>
                 prev
                     ? {
                           ...prev,
-                          items: prev.items.filter((i) => i.product_id !== productId),
+                          items: prev.items.filter((i) => i.id !== itemId),
                           total_items:
                               prev.total_items -
-                              (prev.items.find((i) => i.product_id === productId)?.quantity ?? 0),
+                              (prev.items.find((i) => i.id === itemId)?.quantity ?? 0),
                           total_amount:
                               prev.total_amount -
-                              (prev.items.find((i) => i.product_id === productId)?.subtotal ?? 0),
+                              (prev.items.find((i) => i.id === itemId)?.subtotal ?? 0),
                       }
                     : prev
             )
@@ -80,19 +80,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    const updateQuantity = async (productId: string, newQuantity: number) => {
-        const currentItem = cart?.items.find((i) => i.product_id === productId)
+    const updateQuantity = async (itemId: string, newQuantity: number) => {
+        const currentItem = cart?.items.find((i) => i.id === itemId)
         if (!currentItem) return
         const delta = newQuantity - currentItem.quantity
         if (delta === 0) return
-        await addItem(productId, delta)
+        await addItem(currentItem.product_id, delta, currentItem.variant_id ?? undefined)
     }
 
     const handleClearCart = async () => {
         setIsLoading(true)
         try {
             await browserApiClient.delete("/cart")
-            setCart({ items: [], total_items: 0, total_amount: 0 })
+            setCart({ items: [], total_items: 0, total_amount: 0, min_order_amount: 0 })
         } catch (err) {
             toast.error(err instanceof BrowserApiError ? err.message : "Failed to clear cart")
         } finally {
@@ -100,7 +100,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    const resetCart = () => setCart({ items: [], total_items: 0, total_amount: 0 })
+    const resetCart = () => setCart({ items: [], total_items: 0, total_amount: 0, min_order_amount: 0 })
 
     return (
         <CartContext.Provider
@@ -108,6 +108,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 items: cart?.items ?? [],
                 totalItems: cart?.total_items ?? 0,
                 totalAmount: cart?.total_amount ?? 0,
+                minOrderAmount: cart?.min_order_amount ?? 0,
                 isLoading,
                 isInitializing,
                 addItem,

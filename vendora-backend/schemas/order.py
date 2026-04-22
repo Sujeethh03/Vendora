@@ -16,6 +16,7 @@ class DeliveryAddress(BaseModel):
 
 class PlaceOrderRequest(BaseModel):
     delivery_address: DeliveryAddress
+    discount_code: Optional[str] = None
 
 
 class OrderItemOut(BaseModel):
@@ -24,11 +25,15 @@ class OrderItemOut(BaseModel):
     unit_price: float
     quantity: int
     subtotal: float
+    variant_label: Optional[str] = None
 
 
 class OrderOut(BaseModel):
     id: uuid.UUID
     status: str
+    subtotal: float
+    discount_amount: float
+    discount_code: Optional[str]
     total_amount: float
     delivery_address: DeliveryAddress
     created_at: datetime
@@ -38,6 +43,9 @@ class OrderOut(BaseModel):
 class OrderSummaryOut(BaseModel):
     id: uuid.UUID
     status: str
+    subtotal: float
+    discount_amount: float
+    discount_code: Optional[str]
     total_amount: float
     delivery_address: DeliveryAddress
     created_at: datetime

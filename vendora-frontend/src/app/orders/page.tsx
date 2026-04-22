@@ -53,14 +53,20 @@ export default async function OrdersPage({
                                 </p>
                             </div>
                             <Badge variant="outline" className="capitalize shrink-0">
-                                {order.status}
+                                {order.status.replace("_", " ")}
                             </Badge>
                             <p className="font-semibold shrink-0 text-sm">
                                 {formatPrice(order.total_amount)}
                             </p>
-                            <Button asChild variant="outline" size="sm" className="shrink-0">
-                                <Link href={`/orders/${order.id}`}>View</Link>
-                            </Button>
+                            {order.status === "pending_payment" ? (
+                                <Button asChild size="sm" className="shrink-0">
+                                    <Link href={`/checkout/retry/${order.id}`}>Complete Payment</Link>
+                                </Button>
+                            ) : (
+                                <Button asChild variant="outline" size="sm" className="shrink-0">
+                                    <Link href={`/orders/${order.id}`}>View</Link>
+                                </Button>
+                            )}
                         </div>
                     ))}
                 </div>

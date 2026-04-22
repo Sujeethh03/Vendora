@@ -26,16 +26,16 @@ async def add_to_cart(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    return await cart_service.add_to_cart(db, user.id, data.product_id, data.quantity)
+    return await cart_service.add_to_cart(db, user.id, data.product_id, data.quantity, data.variant_id)
 
 
-@router.delete("/items/{product_id}", status_code=204)
+@router.delete("/items/{item_id}", status_code=204)
 async def remove_from_cart(
-    product_id: uuid.UUID,
+    item_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    await cart_service.remove_from_cart(db, user.id, product_id)
+    await cart_service.remove_from_cart(db, user.id, item_id)
 
 
 @router.delete("", status_code=204)

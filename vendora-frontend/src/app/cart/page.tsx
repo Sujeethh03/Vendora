@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Minus, Plus, Trash2, ShoppingCart, Package } from "lucide-react"
+import { Minus, Plus, Trash2, ShoppingCart, Package, AlertCircle } from "lucide-react"
 import { Navbar } from "@/components/features/navbar"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -15,7 +15,7 @@ const API_URL = config.api.publicBaseUrl
 
 export default function CartPage() {
     const { user, isLoading: authLoading } = useAuth()
-    const { items, totalItems, totalAmount, isLoading, isInitializing, updateQuantity, removeItem, clearCart } = useCart()
+    const { items, totalItems, totalAmount, minOrderAmount, isLoading, isInitializing, updateQuantity, removeItem, clearCart } = useCart()
 
     if (authLoading || isInitializing) {
         return (
@@ -68,6 +68,9 @@ export default function CartPage() {
         )
     }
 
+    const belowMinimum = minOrderAmount > 0 && totalAmount < minOrderAmount
+    const remaining = minOrderAmount - totalAmount
+
     return (
         <div className="min-h-screen bg-background">
             <Navbar />
@@ -83,7 +86,7 @@ export default function CartPage() {
                     {/* Cart Items */}
                     <div className="lg:col-span-2 space-y-4">
                         {items.map((item) => (
-                            <div key={item.product_id} className="flex gap-4 rounded-lg border p-4">
+                            <div key={item.id} className="flex gap-4 rounded-lg border p-4">
                                 <div className="h-20 w-20 shrink-0 rounded-md border overflow-hidden bg-muted flex items-center justify-center">
                                     {item.product_image ? (
                                         <img
@@ -98,14 +101,21 @@ export default function CartPage() {
 
                                 <div className="flex flex-1 flex-col gap-2 min-w-0">
                                     <div className="flex items-start justify-between gap-2">
-                                        <Link
-                                            href={`/products/${item.product_id}`}
-                                            className="font-medium leading-snug hover:underline line-clamp-2"
-                                        >
-                                            {item.product_name}
-                                        </Link>
+                                        <div className="min-w-0">
+                                            <Link
+                                                href={`/products/${item.product_id}`}
+                                                className="font-medium leading-snug hover:underline line-clamp-2"
+                                            >
+                                                {item.product_name}
+                                            </Link>
+                                            {item.variant_label && (
+                                                <p className="text-xs text-muted-foreground mt-0.5">
+                                                    {item.variant_label}
+                                                </p>
+                                            )}
+                                        </div>
                                         <button
-                                            onClick={() => removeItem(item.product_id)}
+                                            onClick={() => removeItem(item.id)}
                                             disabled={isLoading}
                                             className="shrink-0 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
                                         >
@@ -121,7 +131,7 @@ export default function CartPage() {
                                                 size="icon"
                                                 className="h-7 w-7"
                                                 disabled={isLoading}
-                                                onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
+                                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
                                             >
                                                 <Minus className="h-3 w-3" />
                                             </Button>
@@ -133,7 +143,7 @@ export default function CartPage() {
                                                 size="icon"
                                                 className="h-7 w-7"
                                                 disabled={isLoading}
-                                                onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
+                                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                             >
                                                 <Plus className="h-3 w-3" />
                                             </Button>
@@ -181,8 +191,21 @@ export default function CartPage() {
                                 <span>Total</span>
                                 <span>{formatPrice(totalAmount)}</span>
                             </div>
-                            <Button className="w-full" size="lg" asChild>
-                                <Link href="/checkout">Proceed to Checkout</Link>
+
+                            {belowMinimum && (
+                                <div className="flex items-start gap-2 rounded-md bg-orange-50 border border-orange-200 p-3 text-sm text-orange-700">
+                                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                                    <span>
+                                        Add {formatPrice(remaining)} more to meet the minimum order of{" "}
+                                        {formatPrice(minOrderAmount)}
+                                    </span>
+                                </div>
+                            )}
+
+                            <Button className="w-full" size="lg" asChild disabled={belowMinimum}>
+                                <Link href={belowMinimum ? "#" : "/checkout"}>
+                                    Proceed to Checkout
+                                </Link>
                             </Button>
                         </div>
                     </div>

@@ -21,6 +21,10 @@ if config.config_file_name is not None:
 from database import Base  # noqa: E402
 import models.user  # noqa: E402, F401
 import models.product  # noqa: E402, F401
+import models.product_variant  # noqa: E402, F401
+import models.cart  # noqa: E402, F401
+import models.order  # noqa: E402, F401
+import models.discount  # noqa: E402, F401
 
 target_metadata = Base.metadata
 

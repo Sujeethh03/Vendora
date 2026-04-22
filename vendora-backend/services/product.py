@@ -9,7 +9,9 @@ from sqlalchemy.orm import selectinload
 
 from exceptions import NotFoundError, AppException
 from models.product import Product, ProductImage
+from models.product_variant import ProductVariant
 from schemas.product import ProductCreate, ProductUpdate
+from schemas.product_variant import ProductVariantCreate, ProductVariantUpdate
 
 MAX_IMAGES_PER_PRODUCT = 5
 UPLOAD_DIR = "uploads/products"
@@ -20,7 +22,7 @@ async def create_product(db: AsyncSession, admin_id: uuid.UUID, data: ProductCre
     product = Product(seller_id=admin_id, **data.model_dump())
     db.add(product)
     await db.commit()
-    await db.refresh(product, ["images"])
+    await db.refresh(product, ["images", "variants"])
     return product
 
 
@@ -33,7 +35,7 @@ async def update_product(
         setattr(product, field, value)
 
     await db.commit()
-    await db.refresh(product, ["images"])
+    await db.refresh(product, ["images", "variants"])
     return product
 
 
@@ -61,7 +63,7 @@ async def list_products(
     page: int = 1,
     page_size: int = 20,
 ) -> tuple[list[Product], int]:
-    query = select(Product).options(selectinload(Product.images))
+    query = select(Product).options(selectinload(Product.images), selectinload(Product.variants))
 
     if category:
         query = query.where(Product.category == category)
@@ -172,11 +174,55 @@ async def set_primary_image(
     return target
 
 
+async def create_variant(
+    db: AsyncSession, product_id: uuid.UUID, data: ProductVariantCreate
+) -> ProductVariant:
+    await _get_active_product(db, product_id)
+    variant = ProductVariant(product_id=product_id, **data.model_dump())
+    db.add(variant)
+    await db.commit()
+    await db.refresh(variant)
+    return variant
+
+
+async def update_variant(
+    db: AsyncSession, product_id: uuid.UUID, variant_id: uuid.UUID, data: ProductVariantUpdate
+) -> ProductVariant:
+    result = await db.execute(
+        select(ProductVariant).where(
+            ProductVariant.id == variant_id, ProductVariant.product_id == product_id
+        )
+    )
+    variant = result.scalar_one_or_none()
+    if not variant:
+        raise NotFoundError("Variant")
+    for field, value in data.model_dump(exclude_none=True).items():
+        setattr(variant, field, value)
+    await db.commit()
+    await db.refresh(variant)
+    return variant
+
+
+async def delete_variant(
+    db: AsyncSession, product_id: uuid.UUID, variant_id: uuid.UUID
+) -> None:
+    result = await db.execute(
+        select(ProductVariant).where(
+            ProductVariant.id == variant_id, ProductVariant.product_id == product_id
+        )
+    )
+    variant = result.scalar_one_or_none()
+    if not variant:
+        raise NotFoundError("Variant")
+    await db.delete(variant)
+    await db.commit()
+
+
 async def _get_active_product(db: AsyncSession, product_id: uuid.UUID) -> Product:
     result = await db.execute(
         select(Product)
         .where(Product.id == product_id)
-        .options(selectinload(Product.images))
+        .options(selectinload(Product.images), selectinload(Product.variants))
     )
     product = result.scalar_one_or_none()
     if not product:

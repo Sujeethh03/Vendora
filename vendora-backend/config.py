@@ -12,6 +12,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    RAZORPAY_KEY_ID: str
+    RAZORPAY_KEY_SECRET: str
+    RAZORPAY_WEBHOOK_SECRET: str
+
+    MIN_ORDER_AMOUNT: float = 0.0
+
     # Comma-separated list of allowed CORS origins
     ALLOWED_ORIGINS: str = "http://localhost:3000"
 
