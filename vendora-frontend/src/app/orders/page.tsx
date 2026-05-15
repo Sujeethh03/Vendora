@@ -1,9 +1,10 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
+import { cookies } from "next/headers"
 import { Package } from "lucide-react"
 import { Navbar } from "@/components/features/navbar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import { getOrders } from "@/actions/order-actions"
 import { formatPrice, formatDate } from "@/lib/format"
 
@@ -12,6 +13,11 @@ export default async function OrdersPage({
 }: {
     searchParams: Promise<{ page?: string }>
 }) {
+    const cookieStore = await cookies()
+    if (!cookieStore.get("access_token")?.value) {
+        redirect("/login?redirect=/orders")
+    }
+
     const { page: pageParam } = await searchParams
     const page = Math.max(1, parseInt(pageParam ?? "1", 10))
     const data = await getOrders(page)

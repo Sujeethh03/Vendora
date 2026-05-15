@@ -1,11 +1,14 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Separator } from "@/components/ui/separator"
 import { AddToCartButton } from "@/components/features/add-to-cart-button"
 import { BuyNowButton } from "@/components/features/buy-now-button"
-import { CheckCircle2, XCircle, AlertCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { CheckCircle2, XCircle, AlertCircle, Pencil } from "lucide-react"
 import { formatPrice } from "@/lib/format"
+import { useAuth } from "@/components/providers/auth-provider"
 import type { Product } from "@/types"
 
 function StockBadge({ stock }: { stock: number }) {
@@ -29,6 +32,7 @@ function StockBadge({ stock }: { stock: number }) {
 }
 
 export function ProductActions({ product }: { product: Product }) {
+    const { user } = useAuth()
     const hasVariants = product.variants.length > 0
     const [selectedVariantId, setSelectedVariantId] = useState<string | undefined>(undefined)
 
@@ -87,7 +91,14 @@ export function ProductActions({ product }: { product: Product }) {
 
             {/* Actions */}
             <div className="flex flex-col gap-3">
-                {hasVariants && !selectedVariantId ? (
+                {user?.is_admin ? (
+                    <Button asChild variant="outline" className="w-full gap-2">
+                        <Link href={`/dashboard/products/${product.id}`}>
+                            <Pencil className="h-4 w-4" />
+                            Edit in Dashboard
+                        </Link>
+                    </Button>
+                ) : hasVariants && !selectedVariantId ? (
                     <p className="text-sm text-muted-foreground text-center py-2">
                         Please select an option above
                     </p>

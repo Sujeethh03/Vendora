@@ -218,6 +218,16 @@ async def delete_variant(
     await db.commit()
 
 
+async def list_categories(db: AsyncSession) -> list[str]:
+    result = await db.execute(
+        select(Product.category)
+        .where(Product.category.isnot(None))
+        .distinct()
+        .order_by(Product.category)
+    )
+    return [row[0] for row in result.all()]
+
+
 async def _get_active_product(db: AsyncSession, product_id: uuid.UUID) -> Product:
     result = await db.execute(
         select(Product)

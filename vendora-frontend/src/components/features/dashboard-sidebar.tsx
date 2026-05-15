@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Package, LogOut, ShoppingBag } from "lucide-react"
+import { Package, LogOut, ShoppingBag, Settings } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -12,7 +12,8 @@ import { User } from "@/types"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 const sidebarItems = [
-    { icon: Package, label: "My Listings", href: "/dashboard" },
+    { icon: Package,  label: "My Listings",   href: "/dashboard" },
+    { icon: Settings, label: "Store Settings", href: "/dashboard/settings" },
 ]
 
 interface DashboardSidebarProps {

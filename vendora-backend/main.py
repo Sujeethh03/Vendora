@@ -11,7 +11,7 @@ from slowapi.errors import RateLimitExceeded
 from config import settings
 from exceptions import register_exception_handlers
 from jobs.order_expiry import expire_pending_orders_task
-from routers import auth, products, cart, order, discount
+from routers import auth, products, cart, order, discount, store
 from routers import payment
 
 limiter = Limiter(key_func=get_remote_address)
@@ -22,6 +22,8 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 os.makedirs("uploads/products", exist_ok=True)
+os.makedirs("uploads/banners", exist_ok=True)
+os.makedirs("uploads/categories", exist_ok=True)
 app.mount("/static", StaticFiles(directory="uploads"), name="static")
 
 app.add_middleware(
@@ -40,6 +42,7 @@ app.include_router(cart.router)
 app.include_router(order.router)
 app.include_router(payment.router)
 app.include_router(discount.router)
+app.include_router(store.router)
 
 
 @app.on_event("startup")

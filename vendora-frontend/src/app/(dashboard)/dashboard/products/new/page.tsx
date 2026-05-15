@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -36,6 +36,7 @@ type CreateProductValues = z.infer<typeof createProductSchema>
 
 export default function NewProductPage() {
     const router = useRouter()
+    const searchParams = useSearchParams()
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [createdProductId, setCreatedProductId] = useState<string | null>(null)
     const [uploadedImages, setUploadedImages] = useState<ProductImage[]>([])
@@ -47,7 +48,7 @@ export default function NewProductPage() {
             description: "",
             price: "",
             stock: "",
-            category: "",
+            category: searchParams.get("category") ?? "",
         },
     })
 

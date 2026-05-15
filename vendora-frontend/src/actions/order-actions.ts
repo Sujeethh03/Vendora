@@ -25,9 +25,9 @@ export async function getOrders(page = 1): Promise<OrderListResponse | null> {
     try {
         return await apiClient.get<OrderListResponse>("/orders", {
             params: { page: String(page), page_size: String(ORDERS_PAGE_SIZE) },
+            skipErrorLog: true,
         })
-    } catch (error: any) {
-        console.error("Failed to fetch orders:", error)
+    } catch {
         return null
     }
 }

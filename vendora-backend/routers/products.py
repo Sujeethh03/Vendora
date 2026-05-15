@@ -13,6 +13,11 @@ from services import product as product_service
 router = APIRouter(prefix="/products", tags=["products"])
 
 
+@router.get("/categories", response_model=list[str])
+async def list_categories(db: AsyncSession = Depends(get_db)):
+    return await product_service.list_categories(db)
+
+
 @router.get("", response_model=ProductListOut)
 async def list_products(
     category: str | None = Query(default=None),

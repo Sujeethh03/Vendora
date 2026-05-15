@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { CartProvider } from "@/components/providers/cart-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { CartDrawer } from "@/components/features/cart-drawer";
 import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({
@@ -26,14 +27,15 @@ export default function RootLayout({
       <body className={`${inter.variable} antialiased font-sans`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
+          enableSystem={false}
           storageKey="vendora-theme"
           disableTransitionOnChange
         >
           <AuthProvider>
             <CartProvider>
               {children}
+              <CartDrawer />
             </CartProvider>
           </AuthProvider>
           <Toaster />

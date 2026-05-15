@@ -13,6 +13,9 @@ interface CartContextType {
     minOrderAmount: number
     isLoading: boolean
     isInitializing: boolean
+    isOpen: boolean
+    openCart: () => void
+    closeCart: () => void
     addItem: (productId: string, quantity: number, variantId?: string) => Promise<void>
     removeItem: (itemId: string) => Promise<void>
     updateQuantity: (itemId: string, newQuantity: number) => Promise<void>
@@ -27,6 +30,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const [cart, setCart] = useState<CartResponse | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [isInitializing, setIsInitializing] = useState(false)
+    const [isOpen, setIsOpen] = useState(false)
 
     useEffect(() => {
         if (!user) {
@@ -111,6 +115,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 minOrderAmount: cart?.min_order_amount ?? 0,
                 isLoading,
                 isInitializing,
+                isOpen,
+                openCart: () => setIsOpen(true),
+                closeCart: () => setIsOpen(false),
                 addItem,
                 removeItem,
                 updateQuantity,

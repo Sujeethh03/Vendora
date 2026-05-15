@@ -99,6 +99,32 @@ export interface Discount {
     created_at: string
 }
 
+export interface TrustBadge {
+    icon: string
+    text: string
+}
+
+export interface PromoBanner {
+    subtitle: string
+    title: string
+    description: string
+    category: string
+    color: string
+    image_url?: string | null
+}
+
+export interface StoreConfig {
+    store_name: string
+    announcement_text: string | null
+    free_delivery_min: number
+    low_stock_threshold: number
+    hero_tagline: string | null
+    hero_description: string | null
+    trust_badges: TrustBadge[] | null
+    promo_banners: PromoBanner[] | null
+    category_images: Record<string, string> | null
+}
+
 export interface ActionResult<T = void> {
     success: boolean
     data?: T
